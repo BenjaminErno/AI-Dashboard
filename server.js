@@ -4,29 +4,37 @@ import fetch from "node-fetch";
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-// Health check (Render testaa tällä että appi elossa)
-app.get("/healthz", (req, res) => {
-  res.json({ status: "ok" });
+// Sun NocodeAPI base URL ilman tabId:tä
+const SHEETS_API_BASE = process.env.SHEETS_API_URL;
+
+app.get("/", (req, res) => {
+  res.send("✅ AI Dashboard server running!");
 });
 
-// Google Sheets API test
-app.get("/test-sheets", async (req, res) => {
+// Endpoint: /get-sheet?tab=Taulukko1
+app.get("/get-sheet", async (req, res) => {
+  const tabId = req.query.tab;
+
+  if (!tabId) {
+    return res.status(400).json({ error: "Missing tab parameter (?tab=...)" });
+  }
+
   try {
-    const response = await fetch(process.env.GOOGLE_SHEETS_API_URL);
+    const url = `${SHEETS_API_BASE}&tabId=${tabId}`;
+    console.log("Fetching from:", url); // DEBUG printti Renderin logeihin
+
+    const response = await fetch(url);
     const data = await response.json();
+
+    console.log("API response:", data); // DEBUG printti Renderin logeihin
+
     res.json(data);
   } catch (error) {
-    console.error("Sheets API error:", error);
+    console.error("Error fetching Google Sheets:", error);
     res.status(500).json({ error: "Failed to fetch Google Sheets data" });
   }
 });
 
-// Root endpoint (ettei tule enää "Cannot GET /")
-app.get("/", (req, res) => {
-  res.send("AI-Dashboard toimii! ✅ Käytä /healthz tai /test-sheets testaukseen.");
-});
-
-// Käynnistä serveri
 app.listen(PORT, () => {
-  console.log(`✅ Server running on port ${PORT}`);
+  console.log(`🚀 Server running on port ${PORT}`);
 });
