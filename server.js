@@ -1,42 +1,32 @@
-const express = require("express");
-const bodyParser = require("body-parser");
-const cors = require("cors");
-require("dotenv").config();
-
-const { google } = require("googleapis");
+import express from "express";
+import fetch from "node-fetch";
 
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-app.use(cors());
-app.use(bodyParser.json());
-
-// Health check
+// Health check (Render testaa tällä että appi elossa)
 app.get("/healthz", (req, res) => {
-  res.send("AI-Dashboard server running ✅");
+  res.json({ status: "ok" });
 });
 
-// Dummy Sheets test (palauttaa yhden arvon Google Sheetistä kun API-integraatio valmis)
-app.get("/sheets-test", async (req, res) => {
+// Google Sheets API test
+app.get("/test-sheets", async (req, res) => {
   try {
-    res.json({ message: "Sheets API test endpoint toimii 🚀" });
+    const response = await fetch(process.env.GOOGLE_SHEETS_API_URL);
+    const data = await response.json();
+    res.json(data);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Sheets test failed" });
+    console.error("Sheets API error:", error);
+    res.status(500).json({ error: "Failed to fetch Google Sheets data" });
   }
 });
 
-// Dummy Calendar test
-app.get("/calendar-test", async (req, res) => {
-  try {
-    res.json({ message: "Calendar API test endpoint toimii 📅" });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Calendar test failed" });
-  }
+// Root endpoint (ettei tule enää "Cannot GET /")
+app.get("/", (req, res) => {
+  res.send("AI-Dashboard toimii! ✅ Käytä /healthz tai /test-sheets testaukseen.");
 });
 
-// Start server
+// Käynnistä serveri
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`✅ Server running on port ${PORT}`);
 });
