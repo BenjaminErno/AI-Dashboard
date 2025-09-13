@@ -4,33 +4,26 @@ import fetch from "node-fetch";
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-// Sun NocodeAPI base URL ilman tabId:tä
-const SHEETS_API_BASE = process.env.SHEETS_API_URL;
+// otetaan Renderistä ympäristömuuttuja
+const SHEETS_API_URL = process.env.SHEETS_API_URL;
 
 app.get("/", (req, res) => {
-  res.send("✅ AI Dashboard server running!");
+  res.send("✅ AI-Dashboard backend toimii!");
 });
 
-// Endpoint: /get-sheet?tab=Taulukko1
+// endpoint: hakee tietyn tabin datan
 app.get("/get-sheet", async (req, res) => {
-  const tabId = req.query.tab;
-
-  if (!tabId) {
-    return res.status(400).json({ error: "Missing tab parameter (?tab=...)" });
+  const tab = req.query.tab; // esim ?tab=Taulukko1
+  if (!tab) {
+    return res.status(400).json({ error: "Missing tab parameter" });
   }
 
   try {
-    const url = `${SHEETS_API_BASE}&tabId=${tabId}`;
-    console.log("Fetching from:", url); // DEBUG printti Renderin logeihin
-
-    const response = await fetch(url);
+    const response = await fetch(`${SHEETS_API_URL}?tabId=${tab}`);
     const data = await response.json();
-
-    console.log("API response:", data); // DEBUG printti Renderin logeihin
-
     res.json(data);
-  } catch (error) {
-    console.error("Error fetching Google Sheets:", error);
+  } catch (err) {
+    console.error("Error fetching Google Sheets data:", err);
     res.status(500).json({ error: "Failed to fetch Google Sheets data" });
   }
 });
